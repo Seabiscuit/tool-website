@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>URL编码解码 - 在线URL Encode/Decode工具 | ToolBox</title>
+<meta name="description" content="免费在线URL编码解码工具，支持URL/URI编码(Encode)与解码(Decode)，一键复制结果，纯本地处理。">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="logo">
+      <span class="logo-icon">🔧</span>
+      <span>ToolBox</span>
+    </a>
+    <nav>
+      <button class="nav-toggle" aria-label="菜单"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="../index.html">首页</a></li>
+        <li><a href="../about.html">关于我们</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="ad-slot ad-top">📢 广告位招租 — 顶部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<section class="tool-header">
+  <div class="container">
+    <h1>🔗 URL编码解码</h1>
+    <p>URL编码 (Encode) 与解码 (Decode)，支持完整URI与URI组件模式</p>
+  </div>
+</section>
+
+<div class="container with-sidebar">
+  <main>
+    <div class="tool-workspace">
+      <div class="control-row">
+        <button class="btn btn-primary" id="encodeBtn">🔒 URL编码</button>
+        <button class="btn btn-outline" id="decodeBtn">🔓 URL解码</button>
+        <select id="encodeMode" style="width:auto;">
+          <option value="component">URI组件 (推荐)</option>
+          <option value="full">完整URI</option>
+        </select>
+        <button class="btn btn-outline btn-sm" id="swapUrlBtn">⇄ 交换</button>
+        <button class="btn btn-outline btn-sm" id="copyUrlBtn">📋 复制结果</button>
+        <button class="btn btn-outline btn-sm" id="clearUrlBtn">清空</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">输入</p>
+          <textarea id="inputText" placeholder="输入要编码/解码的文本或URL..." style="min-height:220px;"></textarea>
+        </div>
+        <div>
+          <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">输出</p>
+          <textarea id="outputText" placeholder="结果..." style="min-height:220px;background:var(--surface);" readonly></textarea>
+        </div>
+      </div>
+
+      <!-- Quick examples -->
+      <div style="margin-top:16px;">
+        <p style="font-weight:600;margin-bottom:8px;font-size:0.85rem;">常用示例:</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm sample-btn" data-text="https://example.com/搜索?q=你好&page=1">中文URL</button>
+          <button class="btn btn-outline btn-sm sample-btn" data-text='{"name":"张三","age":25}'>JSON字符串</button>
+          <button class="btn btn-outline btn-sm sample-btn" data-text="name=张三&email=zhangsan@example.com">查询字符串</button>
+          <button class="btn btn-outline btn-sm sample-btn" data-text="Hello World! 你好，世界！">中英混合</button>
+        </div>
+      </div>
+
+      <!-- Common encodings reference -->
+      <details style="margin-top:16px;font-size:0.85rem;">
+        <summary style="cursor:pointer;color:var(--text-secondary);">📖 常用字符编码参考</summary>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin-top:8px;font-family:monospace;font-size:0.8rem;">
+          <div>空格 → %20</div>
+          <div>! → %21</div>
+          <div>" → %22</div>
+          <div># → %23</div>
+          <div>$ → %24</div>
+          <div>% → %25</div>
+          <div>& → %26</div>
+          <div>' → %27</div>
+          <div>( → %28</div>
+          <div>) → %29</div>
+          <div>* → %2A</div>
+          <div>+ → %2B</div>
+          <div>, → %2C</div>
+          <div>/ → %2F</div>
+          <div>: → %3A</div>
+          <div>= → %3D</div>
+          <div>? → %3F</div>
+          <div>@ → %40</div>
+          <div>你 → %E4%BD%A0</div>
+          <div>好 → %E5%A5%BD</div>
+        </div>
+      </details>
+
+      <p style="font-size:0.78rem;color:var(--text-light);margin-top:12px;">
+        ⚠ 编码解码在浏览器本地完成。URI组件模式编码更多字符，推荐用于参数编码。
+      </p>
+    </div>
+  </main>
+
+  <aside>
+    <div class="ad-slot ad-sidebar">📢 广告位招租<br>侧边栏 300×250<br>ads@toolbox-demo.com</div>
+  </aside>
+</div>
+
+<div class="container">
+  <div class="ad-slot ad-bottom">📢 广告位招租 — 底部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© 2026 ToolBox. | <a href="../about.html">关于我们</a></p>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+(function() {
+  var inputText = document.getElementById('inputText');
+  var outputText = document.getElementById('outputText');
+  var encodeMode = document.getElementById('encodeMode');
+
+  document.getElementById('encodeBtn').addEventListener('click', function() {
+    var text = inputText.value;
+    if (!text.trim()) { showToast('请输入内容'); return; }
+    try {
+      if (encodeMode.value === 'component') {
+        outputText.value = encodeURIComponent(text);
+      } else {
+        outputText.value = encodeURI(text);
+      }
+      showToast('编码完成');
+    } catch(e) {
+      showToast('编码失败: ' + e.message);
+    }
+  });
+
+  document.getElementById('decodeBtn').addEventListener('click', function() {
+    var text = inputText.value;
+    if (!text.trim()) { showToast('请输入内容'); return; }
+    try {
+      if (encodeMode.value === 'component') {
+        outputText.value = decodeURIComponent(text);
+      } else {
+        outputText.value = decodeURI(text);
+      }
+      showToast('解码完成');
+    } catch(e) {
+      showToast('解码失败: 请检查输入是否为有效的编码字符串');
+    }
+  });
+
+  document.getElementById('swapUrlBtn').addEventListener('click', function() {
+    var tmp = inputText.value;
+    inputText.value = outputText.value;
+    outputText.value = tmp;
+  });
+
+  document.getElementById('copyUrlBtn').addEventListener('click', function() {
+    copyResult(outputText);
+  });
+
+  document.getElementById('clearUrlBtn').addEventListener('click', function() {
+    inputText.value = '';
+    outputText.value = '';
+  });
+
+  // Auto encode on input (debounced)
+  var timer;
+  inputText.addEventListener('input', function() {
+    clearTimeout(timer);
+    timer = setTimeout(function() {
+      var text = inputText.value;
+      if (!text.trim()) { outputText.value = ''; return; }
+      try {
+        outputText.value = encodeMode.value === 'component' ? encodeURIComponent(text) : encodeURI(text);
+      } catch(e) { /* ignore */ }
+    }, 300);
+  });
+
+  encodeMode.addEventListener('change', function() {
+    if (inputText.value.trim()) {
+      try {
+        outputText.value = this.value === 'component' ? encodeURIComponent(inputText.value) : encodeURI(inputText.value);
+      } catch(e) { /* ignore */ }
+    }
+  });
+
+  // Sample buttons
+  document.querySelectorAll('.sample-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      inputText.value = this.dataset.text;
+      inputText.dispatchEvent(new Event('input'));
+    });
+  });
+})();
+</script>
+</body>
+</html>

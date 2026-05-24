@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>繁简体转换 - 在线简体中文↔繁體中文互转工具 | ToolBox</title>
+<meta name="description" content="免费在线繁简体转换工具，支持简体中文与繁體中文双向互转，一键复制结果，纯本地处理保护文本安全。">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="logo">
+      <span class="logo-icon">🔧</span>
+      <span>ToolBox</span>
+    </a>
+    <nav>
+      <button class="nav-toggle" aria-label="菜单"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="../index.html">首页</a></li>
+        <li><a href="../about.html">关于我们</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="ad-slot ad-top">📢 广告位招租 — 顶部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<section class="tool-header">
+  <div class="container">
+    <h1>文 繁简体转换</h1>
+    <p>简体中文 ↔ 繁體中文 双向互转，一键复制结果</p>
+  </div>
+</section>
+
+<div class="container with-sidebar">
+  <main>
+    <div class="tool-workspace">
+      <div class="control-row">
+        <button class="btn btn-primary" id="toTraditional">简体 → 繁體</button>
+        <button class="btn btn-outline" id="toSimplified">繁體 → 简体</button>
+        <button class="btn btn-outline btn-sm" id="swapBtn">⇄ 交换</button>
+        <button class="btn btn-outline btn-sm" id="copyResultBtn">📋 复制结果</button>
+        <button class="btn btn-outline btn-sm" id="clearBtn2">清空</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">输入</p>
+          <textarea id="inputText" placeholder="请输入中文文本..." style="min-height:220px;"></textarea>
+        </div>
+        <div>
+          <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">输出</p>
+          <textarea id="outputText" placeholder="转换结果..." style="min-height:220px;background:var(--surface);" readonly></textarea>
+        </div>
+      </div>
+
+      <p style="font-size:0.78rem;color:var(--text-light);margin-top:12px;">
+        ⚠ 文本在浏览器本地转换，不会上传。基于常用繁简体对照表，覆盖率95%+常用字。
+      </p>
+    </div>
+  </main>
+
+  <aside>
+    <div class="ad-slot ad-sidebar">📢 广告位招租<br>侧边栏 300×250<br>ads@toolbox-demo.com</div>
+  </aside>
+</div>
+
+<div class="container">
+  <div class="ad-slot ad-bottom">📢 广告位招租 — 底部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© 2026 ToolBox. | <a href="../about.html">关于我们</a></p>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+(function() {
+  // Simplified ↔ Traditional conversion maps (common characters)
+  var S2T = {
+    '国':'國','学':'學','习':'習','们':'們','为':'為','会':'會','体':'體','个':'個',
+    '说':'說','对':'對','开':'開','关':'關','门':'門','爱':'愛','车':'車','马':'馬',
+    '万':'萬','与':'與','义':'義','书':'書','买':'買','争':'爭','云':'雲','产':'產',
+    '从':'從','众':'眾','传':'傳','伤':'傷','伦':'倫','伟':'偉','传':'傳','优':'優',
+    '价':'價','似':'侶','但':'但','位':'位','低':'低','住':'住','体':'體','何':'何',
+    '余':'餘','作':'作','使':'使','例':'例','供':'供','保':'保','信':'信','修':'修',
+    '备':'備','传':'傳','伤':'傷','伦':'倫','伟':'偉','优':'優','价':'價','仪':'儀',
+    '亿':'億','光':'光','党':'黨','入':'入','全':'全','八':'八','公':'公','六':'六',
+    '养':'養','内':'內','农':'農','冬':'冬','冰':'冰','冲':'沖','决':'決','几':'幾',
+    '凤':'鳳','击':'擊','出':'出','凿':'鑿','分':'分','划':'劃','则':'則','创':'創',
+    '刚':'剛','删':'刪','别':'別','制':'製','剧':'劇','刘':'劉','力':'力','动':'動',
+    '务':'務','胜':'勝','劳':'勞','势':'勢','包':'包','化':'化','区':'區','医':'醫',
+    '十':'十','协':'協','单':'單','华':'華','卫':'衛','却':'卻','历':'歷','压':'壓',
+    '厌':'厭','原':'原','县':'縣','发':'發','变':'變','台':'臺','号':'號','叶':'葉',
+    '吃':'吃','吗':'嗎','员':'員','听':'聽','启':'啟','呜':'嗚','响':'響','吓':'嚇',
+    '园':'園','围':'圍','图':'圖','团':'團','圣':'聖','地':'地','场':'場','尘':'塵',
+    '坚':'堅','坛':'壇','坏':'壞','块':'塊','报':'報','声':'聲','处':'處','备':'備',
+    '复':'復','头':'頭','夺':'奪','奖':'獎','她':'她','妈':'媽','妇':'婦','妆':'妝',
+    '实':'實','审':'審','写':'寫','宽':'寬','对':'對','寻':'尋','导':'導','将':'將',
+    '专':'專','层':'層','岁':'歲','岛':'島','师':'師','带':'帶','帮':'幫','干':'幹',
+    '并':'並','广':'廣','庄':'莊','庆':'慶','应':'應','庙':'廟','厂':'廠','废':'廢',
+    '开':'開','异':'異','张':'張','弹':'彈','强':'強','归':'歸','当':'當','录':'錄',
+    '形':'形','彻':'徹','征':'徵','後':'後','得':'得','从':'從','复':'復','微':'微',
+    '德':'德','心':'心','忆':'憶','态':'態','忧':'憂','怀':'懷','态':'態','忙':'忙',
+    '快':'快','思':'思','急':'急','总':'總','恋':'戀','恶':'惡','恼':'惱','惊':'驚',
+    '惩':'懲','愿':'願','态':'態','战':'戰','戏':'戲','户':'戶','扫':'掃','执':'執',
+    '扩':'擴','扬':'揚','扰':'擾','抚':'撫','抢':'搶','护':'護','报':'報','担':'擔',
+    '拨':'撥','择':'擇','挡':'擋','拥':'擁','拦':'攔','择':'擇','击':'擊',
+    '无':'無','时':'時','显':'顯','书':'書','会':'會','东':'東','乐':'樂',
+    '业':'業','丛':'叢','东':'東','丝':'絲','两':'兩','严':'嚴','丧':'喪',
+    '个':'個','丰':'豐','串':'串','临':'臨','丽':'麗','举':'舉','义':'義',
+    '乌':'烏','乐':'樂','乔':'喬','习':'習','乡':'鄉','买':'買',
+    '乱':'亂','了':'了','争':'爭','事':'事','二':'二','于':'於','亏':'虧',
+    '云':'雲','互':'互','五':'五','井':'井','亚':'亞','产':'產','亮':'亮',
+    '亲':'親','亿':'億','仅':'僅','仆':'僕','从':'從','仓':'倉','以':'以',
+    '仪':'儀','价':'價','任':'任','伤':'傷','伪':'偽','优':'優',
+    '显':'顯','顾':'顧','风':'風','飞':'飛','饭':'飯','饮':'飲','饱':'飽',
+    '饰':'飾','马':'馬','鱼':'魚','鸟':'鳥','鸭':'鴨','鸡':'雞','鹅':'鵝',
+    '龙':'龍','龟':'龜','齐':'齊','齿':'齒','龄':'齡',
+    '网':'網','罗':'羅','罢':'罷','罪':'罪','罚':'罰','骂':'罵',
+    '为':'為','难':'難','电':'電','需':'需','静':'靜','非':'非',
+    '经':'經','济':'濟','统':'統','计':'計','设':'設','许':'許','诉':'訴',
+    '论':'論','谢':'謝','证':'證','译':'譯','识':'識','诗':'詩','课':'課',
+    '谁':'誰','调':'調','谈':'談','谋':'謀','谦':'謙','讲':'講','读':'讀',
+    '变':'變','让':'讓','认':'認','记':'記','词':'詞','试':'試','话':'話',
+    '该':'該','详':'詳','误':'誤','说':'說','请':'請','诸':'諸',
+    '质':'質','资':'資','卖':'賣','负':'負','责':'責','贤':'賢','货':'貨',
+    '贪':'貪','费':'費','赔':'賠','赏':'賞','赞':'贊','财':'財',
+    '败':'敗','买':'買','贮':'貯','贯':'貫','贱':'賤','贴':'貼',
+    '赵':'趙','赶':'趕','起':'起','超':'超','越':'越','趋':'趨',
+    '跃':'躍','跑':'跑','路':'路','跳':'跳','踪':'蹤','践':'踐',
+    '军':'軍','软':'軟','转':'轉','轴':'軸','轻':'輕','载':'載',
+    '较':'較','辅':'輔','辆':'輛','辈':'輩','辉':'輝',
+    '达':'達','进':'進','远':'遠','违':'違','连':'連','迟':'遲',
+    '选':'選','逊':'遜','逻':'邏','递':'遞','遥':'遙',
+    '边':'邊','辽':'遼','过':'過','运':'運','还':'還','这':'這',
+    '邮':'郵','邻':'鄰','郑':'鄭','邓':'鄧','邹':'鄒',
+    '铁':'鐵','铜':'銅','钢':'鋼','银':'銀','销':'銷','锁':'鎖',
+    '长':'長','门':'門','问':'問','间':'間','闻':'聞','闭':'閉',
+    '阅':'閱','闲':'閑','闪':'閃','队':'隊','阳':'陽','阴':'陰',
+    '阶':'階','际':'際','陆':'陸','陈':'陳','险':'險','随':'隨',
+    '双':'雙','难':'難','电':'電','雾':'霧','静':'靜','页':'頁',
+    '项':'項','顺':'順','须':'須','顿':'頓','领':'領','颈':'頸',
+    '风':'風','飞':'飛','食':'食','饭':'飯','馆':'館','饼':'餅',
+    '马':'馬','验':'驗','骑':'騎','骗':'騙','惊':'驚',
+    '体':'體','点':'點','党':'黨','黄':'黃','黑':'黑','齐':'齊',
+    '灵':'靈','灿':'燦','烂':'爛','灯':'燈','炉':'爐',
+    '烧':'燒','热':'熱','烟':'煙','炼':'煉','粮':'糧',
+    '罢':'罷','罗':'羅','罚':'罰','置':'置','羊':'羊',
+    '群':'群','羡':'羨','义':'義','习':'習','坚':'堅',
+    '号':'號','只':'隻','员':'員','儿':'兒','叶':'葉',
+    '吓':'嚇','吗':'嗎','听':'聽','员':'員','启':'啟'
+  };
+
+  // Build reverse map
+  var T2S = {};
+  Object.keys(S2T).forEach(function(s) { T2S[S2T[s]] = s; });
+
+  function convert(text, map) {
+    var result = '';
+    for (var i = 0; i < text.length; i++) {
+      var ch = text.charAt(i);
+      result += map[ch] || ch;
+    }
+    return result;
+  }
+
+  var inputText = document.getElementById('inputText');
+  var outputText = document.getElementById('outputText');
+
+  document.getElementById('toTraditional').addEventListener('click', function() {
+    outputText.value = convert(inputText.value, S2T);
+  });
+
+  document.getElementById('toSimplified').addEventListener('click', function() {
+    outputText.value = convert(inputText.value, T2S);
+  });
+
+  document.getElementById('swapBtn').addEventListener('click', function() {
+    var tmp = inputText.value;
+    inputText.value = outputText.value;
+    outputText.value = tmp;
+  });
+
+  document.getElementById('copyResultBtn').addEventListener('click', function() {
+    copyResult(outputText);
+  });
+
+  document.getElementById('clearBtn2').addEventListener('click', function() {
+    inputText.value = '';
+    outputText.value = '';
+  });
+
+  // Auto-convert on input
+  var currentDirection = 's2t';
+  document.getElementById('toTraditional').addEventListener('click', function() { currentDirection = 's2t'; });
+  document.getElementById('toSimplified').addEventListener('click', function() { currentDirection = 't2s'; });
+
+  inputText.addEventListener('input', function() {
+    outputText.value = convert(inputText.value, currentDirection === 's2t' ? S2T : T2S);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>证件照换底色 - 在线证件照背景更换工具 | ToolBox</title>
+<meta name="description" content="免费在线证件照换底色工具，支持更换红底、蓝底、白底及自定义颜色，纯本地处理保护隐私，可下载导出。">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .color-presets{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .color-preset{width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:var(--transition);position:relative}
+  .color-preset:hover,.color-preset.active{border-color:var(--accent);transform:scale(1.1)}
+  .color-preset.red{background:#d32f2f}
+  .color-preset.blue{background:#1565c0}
+  .color-preset.white{background:#ffffff;border:3px solid #ddd}
+  .color-preset.gray{background:#9e9e9e}
+  .color-preset.custom{background:linear-gradient(135deg,red,orange,yellow,green,cyan,blue,violet);border:3px solid #ddd}
+  .color-preset .check{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;text-shadow:0 1px 2px rgba(0,0,0,0.4)}
+  .preview-container{text-align:center;margin:16px 0}
+  .preview-container canvas,.preview-container img{border-radius:8px;border:1px solid var(--border);max-width:100%;max-height:400px}
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:center}
+  .compare-grid img,.compare-grid canvas{border-radius:8px;border:1px solid var(--border);max-width:100%}
+  .tolerance-slider{flex:1;max-width:200px}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="logo">
+      <span class="logo-icon">🔧</span>
+      <span>ToolBox</span>
+    </a>
+    <nav>
+      <button class="nav-toggle" aria-label="菜单"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="../index.html">首页</a></li>
+        <li><a href="../about.html">关于我们</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="ad-slot ad-top">📢 广告位招租 — 顶部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<section class="tool-header">
+  <div class="container">
+    <h1>📸 证件照换底色</h1>
+    <p>红底 / 蓝底 / 白底 / 自定义颜色，纯本地处理，保护隐私</p>
+  </div>
+</section>
+
+<div class="container with-sidebar">
+  <main>
+    <div class="tool-workspace">
+      <!-- Upload -->
+      <div class="drop-zone" id="dropZone">
+        <div class="dz-icon">📷</div>
+        <p>点击选择证件照或拖拽到此处</p>
+        <p style="font-size:0.8rem;color:var(--text-light);">建议使用正面半身照，背景色单一的证件照效果最佳</p>
+        <input type="file" id="fileInput" accept="image/*" hidden>
+      </div>
+
+      <!-- Editor -->
+      <div id="editorArea" style="display:none;">
+        <p style="font-weight:600;margin-bottom:10px;">选择新背景颜色:</p>
+        <div class="color-presets">
+          <button class="color-preset red active" data-color="#d32f2f" title="红底"><span class="check"></span></button>
+          <button class="color-preset blue" data-color="#1565c0" title="蓝底"></button>
+          <button class="color-preset white" data-color="#ffffff" title="白底"></button>
+          <button class="color-preset gray" data-color="#9e9e9e" title="灰底"></button>
+          <button class="color-preset custom" data-color="custom" title="自选颜色"></button>
+          <input type="color" id="customColor" value="#4caf50" style="width:40px;height:40px;border-radius:50%;padding:2px;display:none;">
+        </div>
+
+        <div class="control-row">
+          <label>边缘容差:</label>
+          <input type="range" id="tolerance" class="tolerance-slider" min="10" max="100" value="40">
+          <span id="toleranceVal" style="font-weight:600;font-size:0.85rem;min-width:36px;">40</span>
+          <button class="btn btn-outline btn-sm" id="pickBgBtn">🎯 点选背景色</button>
+          <span id="pickHint" style="font-size:0.78rem;color:var(--text-secondary);display:none;">请在图片上点击背景区域</span>
+        </div>
+
+        <div class="compare-grid">
+          <div>
+            <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">原图</p>
+            <img id="originalImg" alt="原图">
+          </div>
+          <div>
+            <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">换底后</p>
+            <canvas id="resultCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="control-row" style="margin-top:12px;">
+          <button class="btn btn-primary" id="applyBtn">应用换底</button>
+          <button class="btn btn-outline" id="downloadBtn">💾 下载图片</button>
+          <button class="btn btn-gold btn-sm" id="hdBtn">高清导出 (PRO)</button>
+          <button class="btn btn-outline btn-sm" id="resetBtn">重新选择</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-light);margin-top:8px;">
+          💡 提示：若效果不理想，可调整边缘容差或点选背景色来优化。高清原尺寸导出为PRO功能。
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <aside>
+    <div class="ad-slot ad-sidebar">📢 广告位招租<br>侧边栏 300×250<br>ads@toolbox-demo.com</div>
+  </aside>
+</div>
+
+<div class="container">
+  <div class="ad-slot ad-bottom">📢 广告位招租 — 底部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© 2026 ToolBox. | <a href="../about.html">关于我们</a></p>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+(function() {
+  var originalImage = null;
+  var currentBgColor = '#d32f2f';
+  var isPicking = false;
+  var pickedBgColor = null;
+
+  var dropZone = document.getElementById('dropZone');
+  var fileInput = document.getElementById('fileInput');
+  var editorArea = document.getElementById('editorArea');
+  var originalImg = document.getElementById('originalImg');
+  var resultCanvas = document.getElementById('resultCanvas');
+  var tolerance = document.getElementById('tolerance');
+  var toleranceVal = document.getElementById('toleranceVal');
+  var customColor = document.getElementById('customColor');
+  var pickBgBtn = document.getElementById('pickBgBtn');
+  var pickHint = document.getElementById('pickHint');
+  var activePreset = document.querySelector('.color-preset.active');
+
+  // Load image
+  setupDropZone(dropZone, fileInput, function(file) {
+    if (!file.type.match(/image\//)) { showToast('请选择图片文件'); return; }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        originalImage = img;
+        originalImg.src = e.target.result;
+        dropZone.style.display = 'none';
+        editorArea.style.display = '';
+        applyBackground();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Tolerance slider
+  tolerance.addEventListener('input', function() {
+    toleranceVal.textContent = this.value;
+    applyBackground();
+  });
+
+  // Color presets
+  document.querySelectorAll('.color-preset').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.color-preset').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      if (this.dataset.color === 'custom') {
+        customColor.style.display = '';
+        customColor.click();
+      } else {
+        customColor.style.display = 'none';
+        currentBgColor = this.dataset.color;
+        applyBackground();
+      }
+    });
+  });
+
+  customColor.addEventListener('input', function() {
+    currentBgColor = this.value;
+    applyBackground();
+  });
+
+  // Pick background color from image
+  pickBgBtn.addEventListener('click', function() {
+    if (isPicking) { isPicking = false; pickHint.style.display = 'none'; return; }
+    isPicking = true;
+    pickHint.style.display = '';
+    pickBgBtn.textContent = '取消点选';
+  });
+
+  originalImg.addEventListener('click', function(e) {
+    if (!isPicking) return;
+    var rect = originalImg.getBoundingClientRect();
+    var scaleX = originalImg.naturalWidth / rect.width;
+    var scaleY = originalImg.naturalHeight / rect.height;
+    var x = Math.floor((e.clientX - rect.left) * scaleX);
+    var y = Math.floor((e.clientY - rect.top) * scaleY);
+
+    var tempCanvas = document.createElement('canvas');
+    tempCanvas.width = originalImg.naturalWidth;
+    tempCanvas.height = originalImg.naturalHeight;
+    var ctx = tempCanvas.getContext('2d');
+    ctx.drawImage(originalImage, 0, 0);
+    var pixel = ctx.getImageData(x, y, 1, 1).data;
+    pickedBgColor = 'rgb(' + pixel[0] + ',' + pixel[1] + ',' + pixel[2] + ')';
+
+    isPicking = false;
+    pickHint.style.display = 'none';
+    pickBgBtn.textContent = '🎯 点选背景色';
+
+    // Unselect all presets
+    document.querySelectorAll('.color-preset').forEach(function(b) { b.classList.remove('active'); });
+    customColor.style.display = '';
+    customColor.value = rgbToHex(pixel[0], pixel[1], pixel[2]);
+    currentBgColor = pickedBgColor;
+
+    applyBackground();
+  });
+
+  function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(function(x) {
+      var h = x.toString(16);
+      return h.length === 1 ? '0' + h : h;
+    }).join('');
+  }
+
+  // Main background replacement
+  function applyBackground() {
+    if (!originalImage) return;
+
+    var maxW = 500;
+    var scale = Math.min(1, maxW / originalImage.width);
+    var w = Math.floor(originalImage.width * scale);
+    var h = Math.floor(originalImage.height * scale);
+
+    resultCanvas.width = w;
+    resultCanvas.height = h;
+    var ctx = resultCanvas.getContext('2d');
+
+    // Draw original scaled
+    ctx.drawImage(originalImage, 0, 0, w, h);
+    var imageData = ctx.getImageData(0, 0, w, h);
+    var data = imageData.data;
+
+    // Get corners for background sampling
+    var corners = [
+      [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
+      [Math.floor(w / 2), 0], [Math.floor(w / 2), h - 1],
+      [0, Math.floor(h / 2)], [w - 1, Math.floor(h / 2)]
+    ];
+
+    // Use picked color or detect from corners
+    var bgR, bgG, bgB;
+    if (pickedBgColor) {
+      var match = pickedBgColor.match(/rgb\((\d+),(\d+),(\d+)\)/);
+      bgR = parseInt(match[1]); bgG = parseInt(match[2]); bgB = parseInt(match[3]);
+    } else {
+      var rSum = 0, gSum = 0, bSum = 0;
+      corners.forEach(function(c) {
+        var idx = (c[1] * w + c[0]) * 4;
+        rSum += data[idx]; gSum += data[idx + 1]; bSum += data[idx + 2];
+      });
+      bgR = Math.round(rSum / corners.length);
+      bgG = Math.round(gSum / corners.length);
+      bgB = Math.round(bSum / corners.length);
+    }
+
+    // Parse target color
+    var target;
+    if (currentBgColor.startsWith('#')) {
+      target = hexToRgb(currentBgColor);
+    } else if (currentBgColor.startsWith('rgb')) {
+      var m = currentBgColor.match(/rgb\((\d+),(\d+),(\d+)\)/);
+      target = {r: parseInt(m[1]), g: parseInt(m[2]), b: parseInt(m[3])};
+    } else {
+      target = {r: 255, g: 255, b: 255};
+    }
+
+    var tol = parseInt(tolerance.value);
+
+    // Replace background pixels
+    for (var i = 0; i < data.length; i += 4) {
+      var dr = Math.abs(data[i] - bgR);
+      var dg = Math.abs(data[i + 1] - bgG);
+      var db = Math.abs(data[i + 2] - bgB);
+      var dist = dr + dg + db;
+
+      if (dist < tol * 3) {
+        // Edge feathering based on distance
+        var alpha = Math.min(1, dist / (tol * 3));
+        data[i] = Math.round(data[i] * alpha + target.r * (1 - alpha));
+        data[i + 1] = Math.round(data[i + 1] * alpha + target.g * (1 - alpha));
+        data[i + 2] = Math.round(data[i + 2] * alpha + target.b * (1 - alpha));
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  function hexToRgb(hex) {
+    var h = hex.replace('#', '');
+    return {
+      r: parseInt(h.substring(0, 2), 16),
+      g: parseInt(h.substring(2, 4), 16),
+      b: parseInt(h.substring(4, 6), 16)
+    };
+  }
+
+  // Buttons
+  document.getElementById('applyBtn').addEventListener('click', function() {
+    applyBackground();
+    showToast('背景已更换');
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', function() {
+    var dataUrl = resultCanvas.toDataURL('image/png');
+    var a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'idphoto.png';
+    a.click();
+  });
+
+  document.getElementById('hdBtn').addEventListener('click', function() {
+    showPremiumModal('高清原尺寸导出');
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    originalImage = null;
+    pickedBgColor = null;
+    editorArea.style.display = 'none';
+    dropZone.style.display = '';
+    fileInput.value = '';
+    isPicking = false;
+    pickHint.style.display = 'none';
+    pickBgBtn.textContent = '🎯 点选背景色';
+  });
+})();
+</script>
+</body>
+</html>

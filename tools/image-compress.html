@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>图片压缩 - 在线PNG/JPEG/WebP压缩工具 | ToolBox</title>
+<meta name="description" content="免费在线图片压缩工具，支持PNG、JPEG、WebP格式，自定义压缩质量，纯本地处理，无需上传文件。高清导出为PRO功能。">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="logo">
+      <span class="logo-icon">🔧</span>
+      <span>ToolBox</span>
+    </a>
+    <nav>
+      <button class="nav-toggle" aria-label="菜单"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="../index.html">首页</a></li>
+        <li><a href="../about.html">关于我们</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="ad-slot ad-top">📢 广告位招租 — 顶部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<section class="tool-header">
+  <div class="container">
+    <h1>🗜️ 图片压缩</h1>
+    <p>支持 PNG / JPEG / WebP 格式，自定义压缩质量，纯本地处理</p>
+  </div>
+</section>
+
+<div class="container with-sidebar">
+  <main>
+    <div class="tool-workspace">
+      <div class="drop-zone" id="dropZone">
+        <div class="dz-icon">📁</div>
+        <p>点击选择图片或拖拽到此处</p>
+        <p style="font-size:0.8rem;color:var(--text-light);margin-top:4px;">支持 PNG、JPEG、WebP 格式</p>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" hidden>
+      </div>
+
+      <div id="previewArea" style="display:none;margin-top:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">原图</p>
+            <img id="originalImg" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+            <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:4px;" id="originalSize"></p>
+          </div>
+          <div>
+            <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">压缩后</p>
+            <img id="compressedImg" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+            <p style="font-size:0.82rem;color:#27ae60;margin-top:4px;" id="compressedSize"></p>
+          </div>
+        </div>
+
+        <div class="control-row" style="margin-top:16px;">
+          <label>压缩质量:</label>
+          <input type="range" id="quality" min="10" max="100" value="80" style="flex:1;max-width:200px;">
+          <span id="qualityVal" style="font-weight:600;font-size:0.9rem;">80%</span>
+        </div>
+
+        <div class="control-row">
+          <label>输出格式:</label>
+          <select id="outFormat" style="width:auto;">
+            <option value="image/jpeg">JPEG</option>
+            <option value="image/png">PNG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+        </div>
+
+        <div class="control-row">
+          <button class="btn btn-primary" id="compressBtn">执行压缩</button>
+          <button class="btn btn-outline" id="downloadBtn" style="display:none;">下载压缩图片</button>
+          <button class="btn btn-gold btn-sm" id="hdExportBtn" style="display:none;">高清导出 (PRO)</button>
+        </div>
+      </div>
+
+      <p style="font-size:0.78rem;color:var(--text-light);margin-top:12px;">
+        ⚠ 提示：图片在浏览器本地处理，不会上传到任何服务器。高清无损导出为PRO会员功能。
+      </p>
+    </div>
+  </main>
+
+  <aside>
+    <div class="ad-slot ad-sidebar">📢 广告位招租<br>侧边栏 300×250<br>ads@toolbox-demo.com</div>
+  </aside>
+</div>
+
+<div class="container">
+  <div class="ad-slot ad-bottom">📢 广告位招租 — 底部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© 2026 ToolBox. | <a href="../about.html">关于我们</a></p>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+(function() {
+  var originalFile, compressedBlob;
+  var dropZone = document.getElementById('dropZone');
+  var fileInput = document.getElementById('fileInput');
+  var previewArea = document.getElementById('previewArea');
+  var originalImg = document.getElementById('originalImg');
+  var compressedImg = document.getElementById('compressedImg');
+  var originalSize = document.getElementById('originalSize');
+  var compressedSize = document.getElementById('compressedSize');
+  var quality = document.getElementById('quality');
+  var qualityVal = document.getElementById('qualityVal');
+  var outFormat = document.getElementById('outFormat');
+  var compressBtn = document.getElementById('compressBtn');
+  var downloadBtn = document.getElementById('downloadBtn');
+  var hdExportBtn = document.getElementById('hdExportBtn');
+
+  quality.addEventListener('input', function() {
+    qualityVal.textContent = this.value + '%';
+  });
+
+  setupDropZone(dropZone, fileInput, function(file) {
+    originalFile = file;
+    originalSize.textContent = '大小: ' + formatSize(file.size);
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      originalImg.src = e.target.result;
+      previewArea.style.display = '';
+      dropZone.style.display = 'none';
+      downloadBtn.style.display = 'none';
+      hdExportBtn.style.display = 'none';
+      compressedImg.src = '';
+      compressedSize.textContent = '';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  compressBtn.addEventListener('click', function() {
+    if (!originalFile) { showToast('请先选择图片'); return; }
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(function(blob) {
+        compressedBlob = blob;
+        compressedImg.src = URL.createObjectURL(blob);
+        compressedSize.textContent = '大小: ' + formatSize(blob.size) +
+          ' (减少 ' + ((1 - blob.size / originalFile.size) * 100).toFixed(1) + '%)';
+        downloadBtn.style.display = '';
+        hdExportBtn.style.display = '';
+        showToast('压缩完成！');
+      }, outFormat.value, quality.value / 100);
+    };
+    img.src = URL.createObjectURL(originalFile);
+  });
+
+  downloadBtn.addEventListener('click', function() {
+    if (!compressedBlob) return;
+    var a = document.createElement('a');
+    var ext = outFormat.value.split('/')[1];
+    a.href = URL.createObjectURL(compressedBlob);
+    a.download = 'compressed.' + ext;
+    a.click();
+  });
+
+  hdExportBtn.addEventListener('click', function() {
+    showPremiumModal('高清导出');
+  });
+})();
+</script>
+</body>
+</html>

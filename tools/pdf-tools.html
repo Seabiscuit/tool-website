@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PDF处理工具 - 在线PDF拆分/合并/转图片 | ToolBox</title>
+<meta name="description" content="免费在线PDF处理工具，支持PDF拆分、合并、PDF转JPG/PNG图片，纯本地处理，文件不上传服务器。">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .tab-bar{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border)}
+  .tab-btn{padding:10px 20px;border:none;background:none;cursor:pointer;font-size:0.9rem;font-weight:600;color:var(--text-secondary);border-bottom:2px solid transparent;margin-bottom:-2px;transition:var(--transition)}
+  .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
+  .file-list{list-style:none;margin:12px 0}
+  .file-list li{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:6px;margin-bottom:6px;font-size:0.88rem}
+  .file-list li .remove-btn{background:none;border:none;color:#e74c3c;cursor:pointer;font-size:1.1rem;padding:2px 6px}
+  .page-range{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .page-range input{width:120px}
+  .preview-canvas{border:1px solid var(--border);border-radius:8px;max-width:100%;margin-top:8px}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="logo">
+      <span class="logo-icon">🔧</span>
+      <span>ToolBox</span>
+    </a>
+    <nav>
+      <button class="nav-toggle" aria-label="菜单"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="../index.html">首页</a></li>
+        <li><a href="../about.html">关于我们</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="ad-slot ad-top">📢 广告位招租 — 顶部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<section class="tool-header">
+  <div class="container">
+    <h1>📄 PDF处理工具</h1>
+    <p>PDF拆分 · PDF合并 · PDF转图片 (JPG/PNG)，纯本地处理</p>
+  </div>
+</section>
+
+<div class="container with-sidebar">
+  <main>
+    <div class="tool-workspace">
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="merge">📑 PDF合并</button>
+        <button class="tab-btn" data-tab="split">✂️ PDF拆分</button>
+        <button class="tab-btn" data-tab="toimage">🖼️ PDF转图片</button>
+      </div>
+
+      <!-- ===== Merge Tab ===== -->
+      <div class="tab-panel active" id="tab-merge">
+        <div class="drop-zone" id="mergeDropZone">
+          <div class="dz-icon">📁</div>
+          <p>点击或拖拽选择多个PDF文件</p>
+          <p style="font-size:0.8rem;color:var(--text-light);">按选择顺序合并，可拖拽排序</p>
+          <input type="file" id="mergeFileInput" accept=".pdf" multiple hidden>
+        </div>
+        <ul class="file-list" id="mergeFileList"></ul>
+        <div class="control-row" id="mergeActions" style="display:none;">
+          <button class="btn btn-primary" id="mergeBtn">合并并下载</button>
+          <button class="btn btn-outline btn-sm" id="clearMergeBtn">清空列表</button>
+        </div>
+        <div class="result-box" id="mergeStatus" style="display:none;"></div>
+        <p style="font-size:0.78rem;color:var(--text-light);margin-top:8px;">
+          ⚠ 合并在浏览器本地完成，文件不会上传。大文件可能需要几秒钟处理时间。
+        </p>
+      </div>
+
+      <!-- ===== Split Tab ===== -->
+      <div class="tab-panel" id="tab-split">
+        <div class="drop-zone" id="splitDropZone">
+          <div class="dz-icon">📄</div>
+          <p>点击或拖拽选择PDF文件</p>
+          <input type="file" id="splitFileInput" accept=".pdf" hidden>
+        </div>
+        <div id="splitInfo" style="display:none;">
+          <p style="font-weight:600;margin-bottom:8px;" id="splitFileName"></p>
+          <div class="page-range">
+            <label>提取页码范围:</label>
+            <input type="text" id="pageRange" placeholder="例: 1-3,5,7-9" style="flex:1;max-width:250px;">
+            <button class="btn btn-primary" id="splitBtn">提取并下载</button>
+          </div>
+          <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:6px;" id="splitPageCount"></p>
+          <p style="font-size:0.8rem;color:var(--text-secondary);">支持格式: 1-3,5,7-9 (逗号分隔页码范围)</p>
+        </div>
+        <div class="result-box" id="splitStatus" style="display:none;"></div>
+        <p style="font-size:0.78rem;color:var(--text-light);margin-top:8px;">
+          ⚠ PDF拆分在浏览器本地处理。提取单页或多页生成新PDF。
+        </p>
+      </div>
+
+      <!-- ===== PDF to Image Tab ===== -->
+      <div class="tab-panel" id="tab-toimage">
+        <div class="drop-zone" id="imageDropZone">
+          <div class="dz-icon">🖼️</div>
+          <p>点击或拖拽选择PDF文件</p>
+          <p style="font-size:0.8rem;color:var(--text-light);">将PDF每一页转为图片</p>
+          <input type="file" id="imageFileInput" accept=".pdf" hidden>
+        </div>
+        <div id="imageInfo" style="display:none;">
+          <div class="control-row">
+            <label>输出格式:</label>
+            <select id="imageFormat" style="width:auto;">
+              <option value="png">PNG</option>
+              <option value="jpeg">JPEG</option>
+            </select>
+            <label>缩放比例:</label>
+            <select id="imageScale" style="width:auto;">
+              <option value="1">1x (标准)</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2x (高清)</option>
+              <option value="3">3x (超清)</option>
+            </select>
+            <button class="btn btn-primary" id="convertImageBtn">转换当前页</button>
+            <button class="btn btn-gold btn-sm" id="convertAllBtn">📦 转换全部页面 (PRO)</button>
+          </div>
+          <div class="control-row">
+            <label>页码:</label>
+            <input type="number" id="pageNum" value="1" min="1" style="width:80px;">
+            <button class="btn btn-outline btn-sm" id="prevPage">◀</button>
+            <button class="btn btn-outline btn-sm" id="nextPage">▶</button>
+            <span id="pageInfo" style="font-size:0.85rem;color:var(--text-secondary);"></span>
+          </div>
+          <div style="text-align:center;margin-top:12px;">
+            <canvas id="pdfCanvas" class="preview-canvas" style="display:none;"></canvas>
+          </div>
+          <div id="imageActions" style="display:none;margin-top:12px;">
+            <button class="btn btn-outline" id="downloadImageBtn">💾 下载图片</button>
+          </div>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-light);margin-top:8px;">
+          ⚠ PDF转图片在浏览器本地渲染。高清多页转为PRO功能。
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <aside>
+    <div class="ad-slot ad-sidebar">📢 广告位招租<br>侧边栏 300×250<br>ads@toolbox-demo.com</div>
+  </aside>
+</div>
+
+<div class="container">
+  <div class="ad-slot ad-bottom">📢 广告位招租 — 底部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© 2026 ToolBox. | <a href="../about.html">关于我们</a></p>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function() {
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+      this.classList.add('active');
+      document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ---- PDF.js setup ----
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  // ========== PDF MERGE ==========
+  var mergeFiles = [];
+
+  setupDropZone(document.getElementById('mergeDropZone'), document.getElementById('mergeFileInput'), function(file) {
+    addMergeFile(file);
+  });
+  document.getElementById('mergeFileInput').addEventListener('change', function() {
+    for (var i = 0; i < this.files.length; i++) {
+      addMergeFile(this.files[i]);
+    }
+    this.value = '';
+  });
+
+  function addMergeFile(file) {
+    if (file.type !== 'application/pdf') { showToast('仅支持PDF文件'); return; }
+    mergeFiles.push(file);
+    renderMergeList();
+  }
+
+  function renderMergeList() {
+    var list = document.getElementById('mergeFileList');
+    var actions = document.getElementById('mergeActions');
+    list.innerHTML = mergeFiles.map(function(f, i) {
+      return '<li>' +
+        '<span>' + (i + 1) + '. ' + f.name + ' (' + formatSize(f.size) + ')</span>' +
+        '<div>' +
+        (i > 0 ? '<button class="remove-btn" data-up="' + i + '">▲</button>' : '') +
+        (i < mergeFiles.length - 1 ? '<button class="remove-btn" data-down="' + i + '">▼</button>' : '') +
+        '<button class="remove-btn" data-remove="' + i + '">✕</button>' +
+        '</div>' +
+        '</li>';
+    }).join('');
+
+    actions.style.display = mergeFiles.length > 1 ? '' : 'none';
+
+    list.querySelectorAll('[data-remove]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        mergeFiles.splice(parseInt(this.dataset.remove), 1);
+        renderMergeList();
+      });
+    });
+    list.querySelectorAll('[data-up]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var i = parseInt(this.dataset.up);
+        var tmp = mergeFiles[i]; mergeFiles[i] = mergeFiles[i - 1]; mergeFiles[i - 1] = tmp;
+        renderMergeList();
+      });
+    });
+    list.querySelectorAll('[data-down]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var i = parseInt(this.dataset.down);
+        var tmp = mergeFiles[i]; mergeFiles[i] = mergeFiles[i + 1]; mergeFiles[i + 1] = tmp;
+        renderMergeList();
+      });
+    });
+  }
+
+  document.getElementById('clearMergeBtn').addEventListener('click', function() {
+    mergeFiles = [];
+    renderMergeList();
+    document.getElementById('mergeStatus').style.display = 'none';
+  });
+
+  document.getElementById('mergeBtn').addEventListener('click', async function() {
+    if (mergeFiles.length < 2) { showToast('请至少选择2个PDF文件'); return; }
+    var status = document.getElementById('mergeStatus');
+    status.style.display = '';
+    status.textContent = '正在合并PDF...';
+    try {
+      var mergedPdf = await PDFLib.PDFDocument.create();
+      for (var i = 0; i < mergeFiles.length; i++) {
+        var bytes = await mergeFiles[i].arrayBuffer();
+        var pdf = await PDFLib.PDFDocument.load(bytes);
+        var pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+        pages.forEach(function(p) { mergedPdf.addPage(p); });
+      }
+      var mergedBytes = await mergedPdf.save();
+      var blob = new Blob([mergedBytes], {type: 'application/pdf'});
+      var url = URL.createObjectURL(blob);
+      status.innerHTML = '✅ 合并完成！<a href="' + url + '" download="merged.pdf" style="color:var(--accent);">点击下载 merged.pdf</a> (' + formatSize(blob.size) + ')';
+      showToast('PDF合并完成');
+    } catch(e) {
+      status.textContent = '合并失败: ' + e.message;
+    }
+  });
+
+  // ========== PDF SPLIT ==========
+  var splitPdfDoc = null, splitPdfBytes = null, splitPageCount = 0;
+
+  setupDropZone(document.getElementById('splitDropZone'), document.getElementById('splitFileInput'), function(file) {
+    loadSplitPdf(file);
+  });
+
+  async function loadSplitPdf(file) {
+    if (file.type !== 'application/pdf') { showToast('仅支持PDF文件'); return; }
+    var info = document.getElementById('splitInfo');
+    var status = document.getElementById('splitStatus');
+    status.style.display = 'none';
+    splitPdfBytes = await file.arrayBuffer();
+    splitPdfDoc = await PDFLib.PDFDocument.load(splitPdfBytes);
+    splitPageCount = splitPdfDoc.getPageCount();
+    document.getElementById('splitFileName').textContent = file.name + ' (' + formatSize(file.size) + ')';
+    document.getElementById('splitPageCount').textContent = '共 ' + splitPageCount + ' 页，页码范围 1-' + splitPageCount;
+    info.style.display = '';
+    document.getElementById('splitDropZone').style.display = 'none';
+  }
+
+  document.getElementById('splitBtn').addEventListener('click', async function() {
+    if (!splitPdfDoc) { showToast('请先选择PDF文件'); return; }
+    var rangeStr = document.getElementById('pageRange').value.trim();
+    if (!rangeStr) { showToast('请输入页码范围'); return; }
+    var status = document.getElementById('splitStatus');
+    status.style.display = '';
+    status.textContent = '正在拆分...';
+    try {
+      var pageIndices = parsePageRange(rangeStr, splitPageCount);
+      if (pageIndices.length === 0) { status.textContent = '无效的页码范围'; return; }
+      var newPdf = await PDFLib.PDFDocument.create();
+      var pages = await newPdf.copyPages(splitPdfDoc, pageIndices);
+      pages.forEach(function(p) { newPdf.addPage(p); });
+      var outBytes = await newPdf.save();
+      var blob = new Blob([outBytes], {type: 'application/pdf'});
+      var url = URL.createObjectURL(blob);
+      status.innerHTML = '✅ 拆分完成！<a href="' + url + '" download="split.pdf" style="color:var(--accent);">点击下载 split.pdf</a> (' + formatSize(blob.size) + ')';
+      showToast('PDF拆分完成');
+    } catch(e) {
+      status.textContent = '拆分失败: ' + e.message;
+    }
+  });
+
+  function parsePageRange(str, maxPage) {
+    var indices = [];
+    var parts = str.split(',');
+    parts.forEach(function(part) {
+      part = part.trim();
+      if (part.includes('-')) {
+        var range = part.split('-');
+        var start = parseInt(range[0]);
+        var end = parseInt(range[1]);
+        if (isNaN(start) || isNaN(end)) return;
+        for (var i = Math.max(1, start); i <= Math.min(maxPage, end); i++) {
+          indices.push(i - 1);
+        }
+      } else {
+        var n = parseInt(part);
+        if (!isNaN(n) && n >= 1 && n <= maxPage) {
+          indices.push(n - 1);
+        }
+      }
+    });
+    // deduplicate
+    return indices.filter(function(v, i, a) { return a.indexOf(v) === i; });
+  }
+
+  // ========== PDF TO IMAGE ==========
+  var imagePdfDoc = null, imagePageCount = 0, currentPage = 1, currentImageDataUrl = null;
+
+  setupDropZone(document.getElementById('imageDropZone'), document.getElementById('imageFileInput'), function(file) {
+    loadImagePdf(file);
+  });
+
+  async function loadImagePdf(file) {
+    if (file.type !== 'application/pdf') { showToast('仅支持PDF文件'); return; }
+    if (typeof pdfjsLib === 'undefined') { showToast('PDF.js库加载失败，请刷新重试'); return; }
+    var arrayBuf = await file.arrayBuffer();
+    imagePdfDoc = await pdfjsLib.getDocument({data: arrayBuf}).promise;
+    imagePageCount = imagePdfDoc.numPages;
+    document.getElementById('imageInfo').style.display = '';
+    document.getElementById('imageDropZone').style.display = 'none';
+    document.getElementById('pageNum').max = imagePageCount;
+    document.getElementById('pageInfo').textContent = '/ ' + imagePageCount + ' 页';
+    currentPage = 1;
+    document.getElementById('pageNum').value = 1;
+    renderPdfPage();
+  }
+
+  async function renderPdfPage() {
+    if (!imagePdfDoc) return;
+    var canvas = document.getElementById('pdfCanvas');
+    var actions = document.getElementById('imageActions');
+    canvas.style.display = 'none';
+    actions.style.display = 'none';
+    currentImageDataUrl = null;
+    try {
+      var page = await imagePdfDoc.getPage(currentPage);
+      var scale = parseFloat(document.getElementById('imageScale').value);
+      var viewport = page.getViewport({scale: scale});
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      var ctx = canvas.getContext('2d');
+      await page.render({canvasContext: ctx, viewport: viewport}).promise;
+      canvas.style.display = '';
+    } catch(e) {
+      showToast('渲染失败: ' + e.message);
+    }
+  }
+
+  document.getElementById('pageNum').addEventListener('change', function() {
+    var n = parseInt(this.value);
+    if (n >= 1 && n <= imagePageCount) { currentPage = n; renderPdfPage(); }
+  });
+  document.getElementById('prevPage').addEventListener('click', function() {
+    if (currentPage > 1) { currentPage--; document.getElementById('pageNum').value = currentPage; renderPdfPage(); }
+  });
+  document.getElementById('nextPage').addEventListener('click', function() {
+    if (currentPage < imagePageCount) { currentPage++; document.getElementById('pageNum').value = currentPage; renderPdfPage(); }
+  });
+
+  document.getElementById('convertImageBtn').addEventListener('click', function() {
+    var canvas = document.getElementById('pdfCanvas');
+    if (!canvas.style.display || canvas.style.display === 'none') { showToast('请先加载PDF页面'); return; }
+    var format = document.getElementById('imageFormat').value;
+    var mime = format === 'png' ? 'image/png' : 'image/jpeg';
+    currentImageDataUrl = canvas.toDataURL(mime, 0.95);
+    document.getElementById('imageActions').style.display = '';
+    showToast('转换完成');
+  });
+
+  document.getElementById('downloadImageBtn').addEventListener('click', function() {
+    if (!currentImageDataUrl) { showToast('请先转换图片'); return; }
+    var a = document.createElement('a');
+    a.href = currentImageDataUrl;
+    var ext = document.getElementById('imageFormat').value;
+    a.download = 'page-' + currentPage + '.' + ext;
+    a.click();
+  });
+
+  document.getElementById('convertAllBtn').addEventListener('click', function() {
+    showPremiumModal('PDF全部页面转图片');
+  });
+
+  document.getElementById('imageScale').addEventListener('change', function() {
+    if (this.value >= 2) {
+      showPremiumModal('高清导出');
+      this.value = '1';
+    }
+    renderPdfPage();
+  });
+
+  document.getElementById('imageFormat').addEventListener('change', renderPdfPage);
+})();
+</script>
+</body>
+</html>

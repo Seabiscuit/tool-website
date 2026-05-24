@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>图片格式转换 - PNG/JPEG/WebP/BMP在线转换 | ToolBox</title>
+<meta name="description" content="免费在线图片格式转换工具，支持PNG、JPEG、WebP、BMP互转，纯本地处理安全快速。批量转换为PRO功能。">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="logo">
+      <span class="logo-icon">🔧</span>
+      <span>ToolBox</span>
+    </a>
+    <nav>
+      <button class="nav-toggle" aria-label="菜单"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="../index.html">首页</a></li>
+        <li><a href="../about.html">关于我们</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="ad-slot ad-top">📢 广告位招租 — 顶部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<section class="tool-header">
+  <div class="container">
+    <h1>🔄 图片格式转换</h1>
+    <p>PNG ↔ JPEG ↔ WebP ↔ BMP 格式互转，本地处理安全快速</p>
+  </div>
+</section>
+
+<div class="container with-sidebar">
+  <main>
+    <div class="tool-workspace">
+      <div class="drop-zone" id="dropZone">
+        <div class="dz-icon">📁</div>
+        <p>点击选择图片或拖拽到此处</p>
+        <p style="font-size:0.8rem;color:var(--text-light);margin-top:4px;">支持 PNG、JPEG、WebP、BMP 格式</p>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/bmp" hidden>
+      </div>
+
+      <div id="convertArea" style="display:none;margin-top:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">原图</p>
+            <img id="originalImg" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+            <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:4px;" id="originalInfo"></p>
+          </div>
+          <div>
+            <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">转换后预览</p>
+            <img id="convertedImg" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+            <p style="font-size:0.82rem;color:#27ae60;margin-top:4px;" id="convertedInfo"></p>
+          </div>
+        </div>
+
+        <div class="control-row" style="margin-top:16px;">
+          <label>目标格式:</label>
+          <select id="targetFormat" style="width:auto;">
+            <option value="image/png">PNG</option>
+            <option value="image/jpeg">JPEG</option>
+            <option value="image/webp">WebP</option>
+            <option value="image/bmp">BMP</option>
+          </select>
+          <button class="btn btn-primary" id="convertBtn">开始转换</button>
+          <button class="btn btn-outline" id="downloadBtn" style="display:none;">下载图片</button>
+        </div>
+
+        <div class="control-row">
+          <button class="btn btn-gold btn-sm" id="batchBtn">📦 批量转换 (PRO)</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-light);margin-top:8px;">
+          ⚠ 格式转换在浏览器本地完成，不上传任何文件。批量转换为PRO付费功能。
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <aside>
+    <div class="ad-slot ad-sidebar">📢 广告位招租<br>侧边栏 300×250<br>ads@toolbox-demo.com</div>
+  </aside>
+</div>
+
+<div class="container">
+  <div class="ad-slot ad-bottom">📢 广告位招租 — 底部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© 2026 ToolBox. | <a href="../about.html">关于我们</a></p>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+(function() {
+  var originalFile, convertedBlob;
+  var dropZone = document.getElementById('dropZone');
+  var fileInput = document.getElementById('fileInput');
+  var convertArea = document.getElementById('convertArea');
+  var originalImg = document.getElementById('originalImg');
+  var convertedImg = document.getElementById('convertedImg');
+  var originalInfo = document.getElementById('originalInfo');
+  var convertedInfo = document.getElementById('convertedInfo');
+  var targetFormat = document.getElementById('targetFormat');
+  var convertBtn = document.getElementById('convertBtn');
+  var downloadBtn = document.getElementById('downloadBtn');
+  var batchBtn = document.getElementById('batchBtn');
+
+  setupDropZone(dropZone, fileInput, function(file) {
+    originalFile = file;
+    var ext = file.name.split('.').pop().toUpperCase();
+    originalInfo.textContent = '格式: ' + ext + ' | 大小: ' + formatSize(file.size);
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      originalImg.src = e.target.result;
+      convertArea.style.display = '';
+      dropZone.style.display = 'none';
+      downloadBtn.style.display = 'none';
+      convertedImg.src = '';
+      convertedInfo.textContent = '';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  convertBtn.addEventListener('click', function() {
+    if (!originalFile) { showToast('请先选择图片'); return; }
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      var mime = targetFormat.value;
+      var quality = mime === 'image/png' ? 1 : 0.92;
+      canvas.toBlob(function(blob) {
+        convertedBlob = blob;
+        convertedImg.src = URL.createObjectURL(blob);
+        var ext = mime.split('/')[1].toUpperCase();
+        convertedInfo.textContent = '格式: ' + ext + ' | 大小: ' + formatSize(blob.size);
+        downloadBtn.style.display = '';
+        showToast('转换完成！');
+      }, mime, quality);
+    };
+    img.src = URL.createObjectURL(originalFile);
+  });
+
+  downloadBtn.addEventListener('click', function() {
+    if (!convertedBlob) return;
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(convertedBlob);
+    var ext = targetFormat.value.split('/')[1];
+    a.download = 'converted.' + ext;
+    a.click();
+  });
+
+  batchBtn.addEventListener('click', function() {
+    showPremiumModal('批量转换');
+  });
+})();
+</script>
+</body>
+</html>

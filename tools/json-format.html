@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JSON格式化 - 在线JSON美化/压缩/校验工具 | ToolBox</title>
+<meta name="description" content="免费在线JSON格式化工具，支持JSON美化、压缩、语法校验，一键复制与下载，纯本地处理安全可靠。">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="logo">
+      <span class="logo-icon">🔧</span>
+      <span>ToolBox</span>
+    </a>
+    <nav>
+      <button class="nav-toggle" aria-label="菜单"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="../index.html">首页</a></li>
+        <li><a href="../about.html">关于我们</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="ad-slot ad-top">📢 广告位招租 — 顶部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<section class="tool-header">
+  <div class="container">
+    <h1>{ } JSON格式化</h1>
+    <p>JSON美化、压缩、语法校验，一键复制与下载</p>
+  </div>
+</section>
+
+<div class="container with-sidebar">
+  <main>
+    <div class="tool-workspace">
+      <div class="control-row">
+        <button class="btn btn-primary" id="formatBtn">✨ 美化</button>
+        <button class="btn btn-outline" id="compressBtn">📦 压缩</button>
+        <button class="btn btn-outline" id="validateBtn">✓ 校验</button>
+        <button class="btn btn-outline btn-sm" id="copyJsonBtn">📋 复制</button>
+        <button class="btn btn-outline btn-sm" id="downloadJsonBtn">💾 下载</button>
+        <button class="btn btn-outline btn-sm" id="clearJsonBtn">清空</button>
+        <select id="indentSize" style="width:auto;margin-left:auto;">
+          <option value="2">缩进: 2空格</option>
+          <option value="4">缩进: 4空格</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">输入 JSON</p>
+          <textarea id="jsonInput" placeholder='粘贴JSON数据，例如: {"name":"张三","age":25}' style="min-height:300px;"></textarea>
+        </div>
+        <div>
+          <p style="font-weight:600;margin-bottom:6px;font-size:0.9rem;">输出结果</p>
+          <textarea id="jsonOutput" placeholder="格式化结果..." style="min-height:300px;background:var(--surface);" readonly></textarea>
+        </div>
+      </div>
+
+      <div id="jsonMsg" style="margin-top:8px;font-size:0.85rem;"></div>
+
+      <p style="font-size:0.78rem;color:var(--text-light);margin-top:12px;">
+        ⚠ JSON数据在浏览器本地处理，不会上传到服务器。
+      </p>
+    </div>
+  </main>
+
+  <aside>
+    <div class="ad-slot ad-sidebar">📢 广告位招租<br>侧边栏 300×250<br>ads@toolbox-demo.com</div>
+  </aside>
+</div>
+
+<div class="container">
+  <div class="ad-slot ad-bottom">📢 广告位招租 — 底部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© 2026 ToolBox. | <a href="../about.html">关于我们</a></p>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+(function() {
+  var jsonInput = document.getElementById('jsonInput');
+  var jsonOutput = document.getElementById('jsonOutput');
+  var jsonMsg = document.getElementById('jsonMsg');
+  var indentSize = document.getElementById('indentSize');
+
+  function showMsg(msg, isError) {
+    jsonMsg.innerHTML = msg;
+    jsonMsg.style.color = isError ? '#e74c3c' : '#27ae60';
+  }
+
+  function tryParse() {
+    try { return JSON.parse(jsonInput.value); }
+    catch(e) { return null; }
+  }
+
+  document.getElementById('formatBtn').addEventListener('click', function() {
+    var obj = tryParse();
+    if (obj === null) { showMsg('❌ JSON格式错误，请检查', true); return; }
+    jsonOutput.value = JSON.stringify(obj, null, parseInt(indentSize.value));
+    showMsg('✅ 格式化成功', false);
+  });
+
+  document.getElementById('compressBtn').addEventListener('click', function() {
+    var obj = tryParse();
+    if (obj === null) { showMsg('❌ JSON格式错误，请检查', true); return; }
+    jsonOutput.value = JSON.stringify(obj);
+    showMsg('✅ 压缩成功，大小: ' + formatSize(new Blob([jsonOutput.value]).size), false);
+  });
+
+  document.getElementById('validateBtn').addEventListener('click', function() {
+    var obj = tryParse();
+    if (obj === null) {
+      try { JSON.parse(jsonInput.value); } catch(e) {
+        showMsg('❌ 校验失败: ' + e.message, true);
+        return;
+      }
+    }
+    var count = obj ? Object.keys(obj).length : 0;
+    showMsg('✅ JSON有效' + (obj && typeof obj === 'object' ? ' | 顶层键数: ' + count : ''), false);
+  });
+
+  document.getElementById('copyJsonBtn').addEventListener('click', function() {
+    copyResult(jsonOutput);
+  });
+
+  document.getElementById('downloadJsonBtn').addEventListener('click', function() {
+    var text = jsonOutput.value.trim();
+    if (!text) { showToast('没有可下载的内容'); return; }
+    var blob = new Blob([text], {type:'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'formatted.json';
+    a.click();
+    showToast('已下载');
+  });
+
+  document.getElementById('clearJsonBtn').addEventListener('click', function() {
+    jsonInput.value = '';
+    jsonOutput.value = '';
+    jsonMsg.innerHTML = '';
+  });
+
+  // Auto-format on input (debounced)
+  var timer;
+  jsonInput.addEventListener('input', function() {
+    clearTimeout(timer);
+    timer = setTimeout(function() {
+      var obj = tryParse();
+      if (obj !== null) {
+        jsonOutput.value = JSON.stringify(obj, null, parseInt(indentSize.value));
+        showMsg('✅ JSON有效', false);
+      } else if (jsonInput.value.trim() === '') {
+        jsonOutput.value = '';
+        jsonMsg.innerHTML = '';
+      } else {
+        showMsg('⚠ JSON格式错误 (输入中...)', true);
+      }
+    }, 400);
+  });
+
+  indentSize.addEventListener('change', function() {
+    var obj = tryParse();
+    if (obj !== null) {
+      jsonOutput.value = JSON.stringify(obj, null, parseInt(indentSize.value));
+    }
+  });
+})();
+</script>
+</body>
+</html>

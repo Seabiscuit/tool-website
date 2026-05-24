@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>日期时间计算器 - 在线日期间隔/推算/时间差计算 | ToolBox</title>
+<meta name="description" content="免费在线日期时间计算器，支持日期间隔计算、日期推算、时间差计算，结果精确到天/小时/分钟。">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="logo">
+      <span class="logo-icon">🔧</span>
+      <span>ToolBox</span>
+    </a>
+    <nav>
+      <button class="nav-toggle" aria-label="菜单"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="../index.html">首页</a></li>
+        <li><a href="../about.html">关于我们</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="ad-slot ad-top">📢 广告位招租 — 顶部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<section class="tool-header">
+  <div class="container">
+    <h1>📅 日期时间计算器</h1>
+    <p>日期间隔计算 · 日期推算 · 时间差计算</p>
+  </div>
+</section>
+
+<div class="container with-sidebar">
+  <main>
+    <!-- Mode 1: Date Difference -->
+    <div class="tool-workspace">
+      <h3 style="margin-bottom:14px;">📐 日期间隔计算</h3>
+      <div class="control-row">
+        <label>起始日期:</label>
+        <input type="date" id="diffStart" style="width:auto;flex:1;max-width:200px;">
+        <label>结束日期:</label>
+        <input type="date" id="diffEnd" style="width:auto;flex:1;max-width:200px;">
+        <button class="btn btn-primary" id="calcDiff">计算间隔</button>
+      </div>
+      <div class="result-box" id="diffResult" style="text-align:center;">
+        请选择两个日期后点击计算
+      </div>
+    </div>
+
+    <!-- Mode 2: Date Add/Subtract -->
+    <div class="tool-workspace">
+      <h3 style="margin-bottom:14px;">📆 日期推算</h3>
+      <div class="control-row">
+        <label>基准日期:</label>
+        <input type="date" id="baseDate" style="width:auto;flex:1;max-width:200px;">
+        <select id="operation" style="width:auto;">
+          <option value="add">加 (+)</option>
+          <option value="subtract">减 (-)</option>
+        </select>
+        <input type="number" id="daysCount" value="30" min="0" max="36500" style="width:100px;">
+        <span>天</span>
+        <button class="btn btn-primary" id="calcDate">推算日期</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm preset-day" data-days="7">7天</button>
+        <button class="btn btn-outline btn-sm preset-day" data-days="30">30天</button>
+        <button class="btn btn-outline btn-sm preset-day" data-days="90">90天</button>
+        <button class="btn btn-outline btn-sm preset-day" data-days="180">180天</button>
+        <button class="btn btn-outline btn-sm preset-day" data-days="365">365天</button>
+      </div>
+      <div class="result-box" id="dateResult" style="text-align:center;">
+        请选择基准日期并设置天数
+      </div>
+    </div>
+
+    <!-- Mode 3: Time Difference -->
+    <div class="tool-workspace">
+      <h3 style="margin-bottom:14px;">⏱️ 时间差计算</h3>
+      <div class="control-row">
+        <label>起始时间:</label>
+        <input type="datetime-local" id="timeStart" style="width:auto;flex:1;max-width:250px;">
+        <label>结束时间:</label>
+        <input type="datetime-local" id="timeEnd" style="width:auto;flex:1;max-width:250px;">
+        <button class="btn btn-primary" id="calcTime">计算时间差</button>
+      </div>
+      <div class="result-box" id="timeResult" style="text-align:center;">
+        请选择两个时间点后点击计算
+      </div>
+    </div>
+
+    <p style="font-size:0.78rem;color:var(--text-light);margin-top:12px;">
+      ⚠ 所有计算在浏览器本地完成。日期推算未排除节假日，如需工作日计算请使用PRO版。
+    </p>
+  </main>
+
+  <aside>
+    <div class="ad-slot ad-sidebar">📢 广告位招租<br>侧边栏 300×250<br>ads@toolbox-demo.com</div>
+  </aside>
+</div>
+
+<div class="container">
+  <div class="ad-slot ad-bottom">📢 广告位招租 — 底部横幅 960×90 | ads@toolbox-demo.com</div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© 2026 ToolBox. | <a href="../about.html">关于我们</a></p>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+(function() {
+  // Set default dates to today
+  var today = new Date();
+  var todayStr = today.toISOString().split('T')[0];
+
+  var diffStart = document.getElementById('diffStart');
+  var diffEnd = document.getElementById('diffEnd');
+  var baseDate = document.getElementById('baseDate');
+
+  diffStart.value = todayStr;
+  diffEnd.value = todayStr;
+  baseDate.value = todayStr;
+
+  // Set default datetime
+  var now = new Date();
+  var localDatetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+  document.getElementById('timeStart').value = localDatetime;
+  document.getElementById('timeEnd').value = localDatetime;
+
+  // ---- Date Difference ----
+  document.getElementById('calcDiff').addEventListener('click', function() {
+    var d1 = new Date(diffStart.value);
+    var d2 = new Date(diffEnd.value);
+    if (isNaN(d1) || isNaN(d2)) { showToast('请选择有效日期'); return; }
+    var diffMs = Math.abs(d2 - d1);
+    var days = Math.floor(diffMs / 86400000);
+    var weeks = Math.floor(days / 7);
+    var months = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+    var absMonths = Math.abs(months);
+    var years = Math.floor(absMonths / 12);
+    var remMonths = absMonths % 12;
+
+    var parts = [];
+    if (years > 0) parts.push(years + ' 年');
+    if (remMonths > 0) parts.push(remMonths + ' 个月');
+    parts.push(days + ' 天');
+    parts.push('(约 ' + weeks + ' 周)');
+
+    diffResult.innerHTML =
+      '<span style="font-size:1.6rem;font-weight:700;color:var(--accent);">' + parts.join(' ') + '</span><br>' +
+      '<span style="font-size:0.85rem;color:var(--text-secondary);">从 ' + diffStart.value + ' 到 ' + diffEnd.value + '</span>';
+  });
+
+  // ---- Date Add/Subtract ----
+  function doDateCalc() {
+    var base = new Date(baseDate.value);
+    if (isNaN(base)) { showToast('请选择有效日期'); return; }
+    var days = parseInt(document.getElementById('daysCount').value) || 0;
+    var op = document.getElementById('operation').value;
+    var result = new Date(base);
+    if (op === 'add') result.setDate(result.getDate() + days);
+    else result.setDate(result.getDate() - days);
+
+    var resultStr = result.toISOString().split('T')[0];
+    var dayNames = ['日','一','二','三','四','五','六'];
+    var dayName = '周' + dayNames[result.getDay()];
+
+    document.getElementById('dateResult').innerHTML =
+      '<span style="font-size:1.6rem;font-weight:700;color:var(--accent);">' + resultStr + '</span> ' +
+      '<span style="color:var(--text-secondary);">' + dayName + '</span><br>' +
+      '<span style="font-size:0.85rem;color:var(--text-secondary);">' +
+      baseDate.value + ' ' + (op === 'add' ? '+' : '-') + ' ' + days + ' 天</span>';
+  }
+
+  document.getElementById('calcDate').addEventListener('click', doDateCalc);
+  document.getElementById('daysCount').addEventListener('change', doDateCalc);
+  baseDate.addEventListener('change', doDateCalc);
+  document.getElementById('operation').addEventListener('change', doDateCalc);
+
+  document.querySelectorAll('.preset-day').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.getElementById('daysCount').value = this.dataset.days;
+      doDateCalc();
+    });
+  });
+
+  // ---- Time Difference ----
+  document.getElementById('calcTime').addEventListener('click', function() {
+    var t1 = new Date(document.getElementById('timeStart').value);
+    var t2 = new Date(document.getElementById('timeEnd').value);
+    if (isNaN(t1) || isNaN(t2)) { showToast('请选择有效时间'); return; }
+    var diffMs = Math.abs(t2 - t1);
+    var days = Math.floor(diffMs / 86400000);
+    var hours = Math.floor((diffMs % 86400000) / 3600000);
+    var minutes = Math.floor((diffMs % 3600000) / 60000);
+    var seconds = Math.floor((diffMs % 60000) / 1000);
+
+    var parts = [];
+    if (days > 0) parts.push(days + ' 天');
+    if (hours > 0) parts.push(hours + ' 小时');
+    if (minutes > 0) parts.push(minutes + ' 分钟');
+    if (seconds > 0 || parts.length === 0) parts.push(seconds + ' 秒');
+
+    document.getElementById('timeResult').innerHTML =
+      '<span style="font-size:1.6rem;font-weight:700;color:var(--accent);">' + parts.join(' ') + '</span><br>' +
+      '<span style="font-size:0.85rem;color:var(--text-secondary);">总计: ' + formatDuration(diffMs) + '</span>';
+  });
+
+  function formatDuration(ms) {
+    var totalSec = Math.floor(ms / 1000);
+    var totalMin = Math.floor(totalSec / 60);
+    var totalHr = Math.floor(totalMin / 60);
+    var days = Math.floor(totalHr / 24);
+    return days + '天 ' + (totalHr % 24) + '小时 ' + (totalMin % 60) + '分钟 ' + (totalSec % 60) + '秒';
+  }
+
+  // Initial calculation
+  doDateCalc();
+})();
+</script>
+</body>
+</html>
